@@ -1,0 +1,13 @@
+{
+    "default": {
+        "sections": [
+            "Executive Summary",
+            "Client Context",
+            "Proposed Solution",
+            "Timeline",
+            "Pricing",
+            "Risks & Mitigations",
+            "Next Steps"
+        ]
+    }
+}
