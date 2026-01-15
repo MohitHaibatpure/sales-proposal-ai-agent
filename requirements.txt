@@ -3,3 +3,4 @@ uvicorn
 streamlit
 requests
 sqlite-utils
+reportlab
