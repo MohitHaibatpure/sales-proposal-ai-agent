@@ -2,6 +2,11 @@ import streamlit as st
 import requests
 
 # --------------------------------------------------
+# BACKEND BASE URL (FIXED)
+# --------------------------------------------------
+BASE_URL = "https://sales-proposal-ai-agent-backend.onrender.com"
+
+# --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
@@ -46,14 +51,13 @@ with st.sidebar:
     )
 
 # --------------------------------------------------
-# RUN AGENT (SESSION_STATE FIX)
+# RUN AGENT (SESSION_STATE SAFE)
 # --------------------------------------------------
 if st.button("Run Agent"):
     with st.spinner("Agent is reasoning..."):
         try:
             response = requests.post(
-                "https://sales-proposal-ai-agent-backend.onrender.com
-/run-agent",
+                f"{BASE_URL}/run-agent",
                 json={
                     "client": client,
                     "use_case": use_case
@@ -61,7 +65,6 @@ if st.button("Run Agent"):
                 timeout=10
             )
 
-            # ✅ STORE RESULT SAFELY
             st.session_state["data"] = response.json()
 
         except Exception as e:
@@ -69,7 +72,7 @@ if st.button("Run Agent"):
             st.exception(e)
 
 # --------------------------------------------------
-# SHOW AGENT OUTPUT (NO NameError POSSIBLE)
+# SHOW AGENT OUTPUT
 # --------------------------------------------------
 if "data" in st.session_state:
     st.subheader("🧾 Generated Proposal")
@@ -89,8 +92,7 @@ if "data" in st.session_state:
     if st.button("Download Proposal as PDF"):
         try:
             pdf_response = requests.post(
-                "https://sales-proposal-ai-agent-backend.onrender.com
-/export-pdf",
+                f"{BASE_URL}/export-pdf",
                 json={
                     "proposal": st.session_state["data"]["proposal"]
                 },
@@ -111,9 +113,8 @@ if "data" in st.session_state:
             st.error("Backend not reachable for PDF export")
             st.exception(e)
 
-
 # --------------------------------------------------
-# AGENT MEMORY VIEWER (ACROSS TIME)
+# AGENT MEMORY VIEWER
 # --------------------------------------------------
 st.divider()
 st.subheader("🧠 Agent Memory (Across Time)")
@@ -121,14 +122,12 @@ st.subheader("🧠 Agent Memory (Across Time)")
 if st.checkbox("Show Agent Memory"):
     try:
         mem_response = requests.get(
-            f"https://sales-proposal-ai-agent-backend.onrender.com
-/memory/{client}",
+            f"{BASE_URL}/memory/{client}",
             timeout=5
         )
 
         if mem_response.status_code == 200:
             memory_data = mem_response.json()
-
             past = memory_data.get("past_proposals", [])
 
             if past:
