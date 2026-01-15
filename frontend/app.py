@@ -52,7 +52,8 @@ if st.button("Run Agent"):
     with st.spinner("Agent is reasoning..."):
         try:
             response = requests.post(
-                "http://127.0.0.1:8000/run-agent",
+                "https://sales-proposal-ai-agent-backend.onrender.com
+/run-agent",
                 json={
                     "client": client,
                     "use_case": use_case
@@ -88,7 +89,8 @@ if "data" in st.session_state:
     if st.button("Download Proposal as PDF"):
         try:
             pdf_response = requests.post(
-                "http://127.0.0.1:8000/export-pdf",
+                "https://sales-proposal-ai-agent-backend.onrender.com
+/export-pdf",
                 json={
                     "proposal": st.session_state["data"]["proposal"]
                 },
@@ -119,7 +121,8 @@ st.subheader("🧠 Agent Memory (Across Time)")
 if st.checkbox("Show Agent Memory"):
     try:
         mem_response = requests.get(
-            f"http://127.0.0.1:8000/memory/{client}",
+            f"https://sales-proposal-ai-agent-backend.onrender.com
+/memory/{client}",
             timeout=5
         )
 
