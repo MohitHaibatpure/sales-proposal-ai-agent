@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# Sales Proposal AI Agent (Copilot-Style)
+
+# Sales Proposal AI Agent (My Internship Project at SR INDIA)
 
 ## Overview
 This project demonstrates a working AI agent for enterprise sales proposal
