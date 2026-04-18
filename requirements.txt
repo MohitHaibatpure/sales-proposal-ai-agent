@@ -2,5 +2,6 @@ fastapi
 uvicorn
 streamlit
 requests
-sqlite-utils
 reportlab
+google-generativeai
+python-dotenv

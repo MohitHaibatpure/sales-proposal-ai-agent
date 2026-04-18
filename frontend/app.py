@@ -1,22 +1,13 @@
 import streamlit as st
 import requests
 
-# --------------------------------------------------
-# BACKEND BASE URL (FIXED)
-# --------------------------------------------------
-BASE_URL = "https://sales-proposal-ai-agent-backend.onrender.com"
+BASE_URL = "http://localhost:8000"
 
-# --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
 st.set_page_config(
     page_title="Sales Proposal AI Agent",
     layout="wide"
 )
 
-# --------------------------------------------------
-# DARK / COPILOT-STYLE UI
-# --------------------------------------------------
 st.markdown("""
 <style>
 body {
@@ -32,27 +23,17 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
 st.title("Sales Proposal AI Agent")
 
-# --------------------------------------------------
-# SIDEBAR INPUTS
-# --------------------------------------------------
 with st.sidebar:
     st.header("Client Context")
 
-    client = st.text_input("Client Name", value="Acme Corp")
+    client = st.text_input("Client Name")
 
     use_case = st.text_area(
-        "Client Requirement",
-        value="AI sales proposal for demand forecasting"
+        "Client Requirement"
     )
 
-# --------------------------------------------------
-# RUN AGENT (SESSION_STATE SAFE)
-# --------------------------------------------------
 if st.button("Run Agent"):
     with st.spinner("Agent is reasoning..."):
         try:
@@ -62,13 +43,13 @@ if st.button("Run Agent"):
                     "client": client,
                     "use_case": use_case
                 },
-                timeout=10
+                timeout=60
             )
 
             st.session_state["data"] = response.json()
 
         except Exception as e:
-            st.error("Failed to reach backend")
+            st.error("Failed to reach backend. Is the FastAPI server running?")
             st.exception(e)
 
 # --------------------------------------------------
@@ -83,63 +64,33 @@ if "data" in st.session_state:
     )
 
 # --------------------------------------------------
-# PDF EXPORT
+# PDF EXPORT (simplified — single click)
 # --------------------------------------------------
 if "data" in st.session_state:
     st.divider()
     st.subheader("📄 Export Proposal")
 
-    if st.button("Download Proposal as PDF"):
-        try:
-            pdf_response = requests.post(
-                f"{BASE_URL}/export-pdf",
-                json={
-                    "proposal": st.session_state["data"]["proposal"]
-                },
-                timeout=10
-            )
-
-            if pdf_response.status_code == 200:
-                st.download_button(
-                    label="📥 Click to Download PDF",
-                    data=pdf_response.content,
-                    file_name="Sales_Proposal.pdf",
-                    mime="application/pdf"
-                )
-            else:
-                st.error("Failed to generate PDF")
-
-        except Exception as e:
-            st.error("Backend not reachable for PDF export")
-            st.exception(e)
-
-# --------------------------------------------------
-# AGENT MEMORY VIEWER
-# --------------------------------------------------
-st.divider()
-st.subheader("🧠 Agent Memory (Across Time)")
-
-if st.checkbox("Show Agent Memory"):
+    # Fetch PDF immediately and show download button
     try:
-        mem_response = requests.get(
-            f"{BASE_URL}/memory/{client}",
-            timeout=5
+        pdf_response = requests.post(
+            f"{BASE_URL}/export-pdf",
+            json={
+                "proposal": st.session_state["data"]["proposal"]
+            },
+            timeout=10
         )
 
-        if mem_response.status_code == 200:
-            memory_data = mem_response.json()
-            past = memory_data.get("past_proposals", [])
-
-            if past:
-                for idx, proposal in enumerate(past, start=1):
-                    st.markdown(f"**Past Proposal {idx}:**")
-                    st.code(proposal)
-            else:
-                st.info("No past proposals found for this client.")
-
+        if pdf_response.status_code == 200:
+            st.download_button(
+                label="📥 Download Proposal as PDF",
+                data=pdf_response.content,
+                file_name="Sales_Proposal.pdf",
+                mime="application/pdf"
+            )
         else:
-            st.error("Failed to fetch agent memory")
+            st.error("Failed to generate PDF")
 
-    except Exception as e:
-        st.error("Backend not reachable for memory lookup")
-        st.exception(e)
+    except Exception:
+        st.warning("PDF export unavailable — backend not reachable")
+
+
