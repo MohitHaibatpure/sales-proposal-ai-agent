@@ -1,56 +1,84 @@
-# 🚀 Sales Proposal AI Agent
+# 🚀 Sales Proposal AI Agent — RAG Edition
 
-An enterprise-grade AI Agent that automates end-to-end sales proposal creation. This project was built to demonstrate advanced **Stateless Microservice Architecture**, **High Availability AI Failover**, and **Dynamic Document Generation**.
+A **RAG-powered** (Retrieval-Augmented Generation) AI agent that generates professional sales proposals. Built with **LangChain**, **FAISS**, **Google Gemini**, and **Streamlit**.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.25+-FF4B4B.svg?style=for-the-badge&logo=streamlit&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Stateless-orange.svg?style=for-the-badge)
+![LangChain](https://img.shields.io/badge/LangChain-Framework-green.svg?style=for-the-badge)
+![FAISS](https://img.shields.io/badge/FAISS-Vector_DB-orange.svg?style=for-the-badge)
+![Gemini](https://img.shields.io/badge/Gemini_2.0-Flash-red.svg?style=for-the-badge&logo=google&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B.svg?style=for-the-badge&logo=streamlit&logoColor=white)
 
 ---
 
 ## ⚡ What It Does
 
-- 🎯 **Dynamic Scope Inference:** Takes a simple Sales Client Name & Requirement from the user.
-- 🧠 **Generative Synthesis:** Infers an appropriate industry, estimates a realistic budget, and generates a fully tailored Go-To-Market Sales Proposal.
-- ⚙️ **Internal Approval Logic:** Parses the generated proposal to determine and simulate managerial business-rule approvals.
-- 📄 **Export to Gridded PDF:** Intelligently renders the generated markdown tables and styling into a neat, gridded PDF document via an in-memory byte buffer.
+- 🎯 **Dynamic Scope Inference:** Takes a Client Name & Requirement and generates a tailored sales proposal.
+- 📎 **RAG-Enhanced (Optional):** Upload a PDF document — the system extracts, chunks, embeds, and retrieves relevant context to ground the proposal in real data.
+- 🧠 **Generative Synthesis:** Uses Google Gemini 2.0 Flash via LangChain to produce a structured 7-section proposal.
+- ⚙️ **Approval Simulation:** Automatically determines approval status based on business rules.
+- 📄 **PDF Export:** Download the generated proposal as a professionally formatted PDF.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## 🏗️ Architecture — RAG Pipeline
 
-This project was intentionally engineered to follow **Cloud-Native, Stateless** best practices, making it instantly ready to deploy on AWS / Kubernetes environments.
-
-### 🎨 1. Frontend Layer
-* **Technology:** **`Streamlit`**
-* **Engineering Purpose:** Allows for the rapid prototyping of AI tools with integrated, seamless state management and modern "Copilot" UI styling.
-
-### 🚀 2. API & Backend Orchestration
-* **Technology:** **`FastAPI`**
-* **Engineering Purpose:** Extends high-performance ASGI execution. Built-in `Pydantic` ensures strict type validation on incoming requests, and custom active CORS middleware enforces secure cross-origin communication.
-
-### 🧠 3. Generative Ecosystem & Failover Routing
-* **Technologies:** **`Google Gemini 2.0 Flash`** + **`Pollinations AI`**
-* **Engineering Purpose:** 
-  * The primary REST interface connects directly to Google Gemini for hyper-fast logical reasoning. 
-  * **High Availability Failover:** If Gemini hits a HTTP rate limit, the backend securely intercepts the crash and dynamically re-routes the payload to the secondary Pollinations API, ensuring 100% continuous application uptime.
-
-### 📄 4. Stateless Document Streaming
-* **Technology:** **`ReportLab Platypus`**
-* **Engineering Purpose:** Employs a custom, intelligent Markdown-to-PDF parser. Bypasses hard drive disk I/O bottlenecks completely by streaming the generated Proposal PDFs directly from system RAM (`io.BytesIO`) securely down to the HTTP client.
+```
+User Input (Client + Requirement)
+        │
+        ▼
+┌─────────────────────────┐
+│   Document Loading      │ ← PyPDFLoader (optional PDF upload)
+│   Text Chunking         │ ← RecursiveCharacterTextSplitter
+│   Embeddings            │ ← GoogleGenerativeAIEmbeddings
+│   FAISS Vector Store    │ ← In-memory vector index
+└─────────┬───────────────┘
+          │
+          ▼
+┌─────────────────────────┐
+│  Similarity Retrieval   │ ← Top-k nearest chunks
+│  + Prompt Augmentation  │
+└─────────┬───────────────┘
+          │
+          ▼
+┌─────────────────────────┐
+│  Gemini LLM Generation  │ ← ChatGoogleGenerativeAI (Primary)
+│  Pollinations Fallback  │ ← Free API (Secondary, if Gemini fails)
+│  Approval Simulation    │
+│  PDF Export (ReportLab)  │
+└─────────────────────────┘
+          │
+          ▼
+     Streamlit UI
+```
 
 ---
 
-## 🚀 How to Run Externally
+## 📂 Folder Structure
 
-### 1. Initialize the Environment
-Ensure you have an API key from Google AI Studio. 
-Create an `.env` file in the root directory:
+```text
+sales-proposal-ai-agent/
+├── app.py              # Streamlit frontend (entry point)
+├── rag_pipeline.py     # Core RAG pipeline (load, chunk, embed, retrieve, generate)
+├── pdf_export.py       # In-memory PDF generation (ReportLab)
+├── requirements.txt    # Python dependencies
+├── .env                # API key (Git-ignored)
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 🚀 How to Run
+
+### 1. Set Up API Key
+
+Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=AIzaSy...YourKeyHere...
 ```
+
+Get your key from [Google AI Studio](https://aistudio.google.com/apikey).
 
 ### 2. Install Dependencies
 
@@ -58,35 +86,25 @@ GEMINI_API_KEY=AIzaSy...YourKeyHere...
 pip install -r requirements.txt
 ```
 
-### 3. Start the Backend API (FastAPI)
+### 3. Run the App
 
 ```bash
-uvicorn backend.main:app --reload
+streamlit run app.py
 ```
-> *The API is now natively exposing endpoints at `http://localhost:8000`*
 
-### 4. Start the Frontend Application
-
-In a **new** terminal:
-```bash
-streamlit run frontend/app.py
-```
-> *The Copilot UI is now hosted at `http://localhost:8501`*
+The app opens at `http://localhost:8501` 🎉
 
 ---
 
-## 📂 Source Code Layout
+## 🛠️ Tech Stack
 
-A major focus of this project was reducing boilerplate into purely functional code logic. The entire orchestrator relies on exactly three files.
-
-```text
-sales-proposal-ai-agent/
-├── backend/
-│   ├── main.py            # FastAPI REST endpoints + RAM-level Stateless PDF generation
-│   └── agent.py           # Core agent logic, LLM Prompting, and Failover routing
-├── frontend/
-│   └── app.py             # Streamlit Copilot-style interface
-├── INTERVIEW_GUIDE.md     # Deep-dive Architecture Documentation
-├── requirements.txt       # Dependency tree
-└── .env                   # Environment variables (Git-ignored)
-```
+| Technology | Purpose |
+|---|---|
+| **Python 3.10+** | Core language |
+| **LangChain** | AI orchestration framework |
+| **FAISS** | Vector similarity search |
+| **Google Gemini 2.0 Flash** | Primary LLM + Embeddings |
+| **Pollinations AI** | Secondary LLM fallback (free, unauthenticated) |
+| **Streamlit** | Web frontend |
+| **ReportLab** | PDF generation |
+| **python-dotenv** | Secure API key management |
