@@ -3,28 +3,8 @@ import requests
 from dotenv import load_dotenv
 
 # Load API key from .env
-load_dotenv()
+load_dotenv(override=True)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-def fetch_crm_data(client_name: str) -> dict:
-    """Mock CRM database lookup."""
-    mock_crm = {
-        "Acme Corp": {
-            "industry": "Manufacturing",
-            "budget": "$120,000",
-            "past_deals": ["ERP Upgrade", "Supply Chain Optimization"]
-        },
-        "Northstar Retail": {
-            "industry": "Retail",
-            "budget": "$75,000",
-            "past_deals": ["AI Demand Forecasting"]
-        }
-    }
-    return mock_crm.get(client_name, {
-        "industry": "Unknown",
-        "budget": "Not Disclosed",
-        "past_deals": []
-    })
 
 def simulate_approval(proposal: str) -> str:
     """Simulates internal approval based on content."""
@@ -32,34 +12,31 @@ def simulate_approval(proposal: str) -> str:
         return "Approved by Sales Manager"
     return "Needs Review - Missing Budget Info"
 
-def generate_proposal(client: str, context: dict, use_case: str) -> str:
+def generate_proposal(client: str, use_case: str) -> str:
     """
     Uses Google Gemini via REST API to generate a tailored sales proposal.
+    Dynamically assumes timeline and realistic pricing since no CRM is attached.
     """
-    past_deals = (", ".join(context["past_deals"]) if context.get("past_deals") else "No prior engagements")
 
-    prompt = f"""You are an expert enterprise sales consultant. Generate a professional, 
-detailed sales proposal based on the following information.
+    prompt = f"""You are an expert enterprise sales consultant. Generate a highly professional, 
+detailed sales proposal for the following deal:
 
 CLIENT: {client}
-INDUSTRY: {context.get('industry', 'N/A')}
-BUDGET: {context.get('budget', 'N/A')}
-PAST ENGAGEMENTS: {past_deals}
-
 CLIENT REQUIREMENT:
 {use_case}
 
+Based strictly on this requirement, intelligently infer the industry and scale of the project.
 Generate a structured sales proposal with these sections:
 1. Executive Summary
-2. Client Context & Understanding
+2. Client Context & Project Understanding
 3. Proposed Solution
 4. Business Value & Expected ROI
 5. Implementation Approach
-6. Pricing Estimate
+6. Pricing Estimate (Intelligently estimate a realistic budget based on the scope of their requirement)
 7. Next Steps
 
-Make the proposal specific, actionable, and professional. 
-Tailor the solution directly to what the client asked for — do NOT use generic content.
+Make the proposal specific, actionable, and highly professional. 
+Tailor the solution directly to what the client asked for. Do NOT use generic placeholder text.
 Keep it concise but impactful (around 400-500 words)."""
 
     try:
@@ -75,7 +52,7 @@ Keep it concise but impactful (around 400-500 words)."""
         
     except Exception as gemini_err:
         try:
-            # 2. Secondary AI: Free Unauthenticated API (Pollinations) - No Rule Based!
+            # 2. Secondary AI: Free Unauthenticated API (Pollinations)
             print(f"Gemini failed ({gemini_err}). Switching to secondary Free AI fallback...")
             fallback_url = "https://text.pollinations.ai/"
             fallback_payload = {
@@ -90,13 +67,12 @@ Keep it concise but impactful (around 400-500 words)."""
             return fallback_response.text.strip()
             
         except Exception as e:
-            # Absolute worst-case scenario if both APIs are down
-            return f"[AI Error: Both Primary and Secondary AI APIs failed. Err: {e}]\n\nFallback Proposal for {client}:\nRequirement: {use_case}\nBudget: {context.get('budget', 'N/A')}\nIndustry: {context.get('industry', 'N/A')}"
+            # Absolute worst-case scenario
+            return f"[AI Error: Both Primary and Secondary AI APIs failed. Err: {e}]\n\nFallback Proposal for {client}:\nRequirement: {use_case}\n(Due to system failure, we could not generate the AI content)"
 
 def run_agent(client: str, use_case: str) -> dict:
-    """Main agent entry point orchestrating data gathering, generation, and approval."""
-    context = fetch_crm_data(client)
-    proposal = generate_proposal(client, context, use_case)
+    """Main agent entry point orchestrating proposal generation and approval."""
+    proposal = generate_proposal(client, use_case)
     approval_status = simulate_approval(proposal)
 
     return {
