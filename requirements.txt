@@ -1,20 +1,8 @@
-# ============================================
-# Sales Proposal AI Agent - RAG Pipeline
-# ============================================
-# Core RAG Framework
-langchain                  # Orchestration: chains, prompts, document loaders
-langchain-google-genai     # Google Gemini LLM + Embeddings integration
-langchain-community        # Community integrations (FAISS vector store)
-faiss-cpu                  # Facebook AI Similarity Search (vector database)
-
-# Document Processing
-pypdf                      # PDF text extraction for document loading
-
-# Frontend
-streamlit                  # Web UI framework
-
-# PDF Export
-reportlab                  # In-memory PDF generation with tables & formatting
-
-# Environment
-python-dotenv              # Secure API key loading from .env
+langchain
+langchain-google-genai
+langchain-community
+faiss-cpu
+pypdf
+streamlit
+reportlab
+python-dotenv
